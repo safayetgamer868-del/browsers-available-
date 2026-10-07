@@ -20,14 +20,11 @@ jobs:
           echo "ZIP file found: $ZIP_FILE. Extracting..."
           unzip -o "$ZIP_FILE" -d ./extracted_project
           
-          # Move extracted files to root if nested
           if [ -d "./extracted_project/OptimalBrowser_SourceCode" ]; then
             cp -r ./extracted_project/OptimalBrowser_SourceCode/* .
           else
             cp -r ./extracted_project/* .
           fi
-        else
-          echo "No ZIP file found, proceeding with raw repository files."
         fi
 
     - name: Set up JDK 17
@@ -35,6 +32,9 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: '17'
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
 
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
@@ -49,7 +49,7 @@ jobs:
       run: chmod +x gradlew
 
     - name: Build Debug APK
-      run: ./gradlew assembleDebug --stacktrace
+      run: ./gradlew assembleDebug --info
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
