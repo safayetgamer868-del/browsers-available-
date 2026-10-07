@@ -22,20 +22,31 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
 
-    - name: Generate Gradle Wrapper if Missing
+    - name: Locate Project Root & Build
       run: |
+        # Find where settings.gradle or build.gradle is located
+        BUILD_FILE=$(find . -maxdepth 3 -name "settings.gradle.kts" -o -name "build.gradle.kts" -o -name "settings.gradle" -o -name "build.gradle" | head -n 1)
+        
+        if [ -z "$BUILD_FILE" ]; then
+          echo "ERROR: Could not find Gradle build files in repo!"
+          exit 1
+        fi
+
+        PROJECT_DIR=$(dirname "$BUILD_FILE")
+        echo "Found Gradle project at: $PROJECT_DIR"
+        cd "$PROJECT_DIR"
+
+        # Generate wrapper if missing
         if [ ! -f "gradlew" ]; then
           gradle wrapper
         fi
 
-    - name: Make Gradlew Executable
-      run: chmod +x gradlew
-
-    - name: Build Debug APK
-      run: ./gradlew assembleDebug --stacktrace
+        chmod +x gradlew
+        ./gradlew assembleDebug --stacktrace
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
         name: OptimalBrowser-APK
-        path: app/build/outputs/apk/debug/app-debug.apk
+        path: "**/app/build/outputs/apk/debug/app-debug.apk"
+        
